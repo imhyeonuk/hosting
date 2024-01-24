@@ -1,4 +1,9 @@
-let money = prompt("받고 싶은 돈을 입력하시오")
+function inputName(){
 
- alert("싫어!")
+  let name = prompt("이름을 입력하세요")
+ document.write(`당신의 이름은 ${name}입니다.`)
  
+ 
+ 
+   
+ }
