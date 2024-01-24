@@ -1,9 +1,25 @@
-function inputName(){
+const bttn = document.querySelector("button");
+console.log(bttn)
 
-  let name = prompt("이름을 입력하세요")
- document.write(`당신의 이름은 ${name}입니다.`)
- 
- 
- 
-   
- }
+bttn.onclick = ()  =>   {
+  document.body.classList.toggle("dark");
+  bttn.innerText==="다크 모드로 바꾸기"? 
+  bttn.innerText = "라이트 모드로 바꾸기" :
+  bttn.innerText = "다크 모드로 바꾸기"
+
+}
+
+
+
+
+const letter = document.querySelector("#contents")
+console.log(letter)
+
+letter.onclick = ()  =>   {
+  letter.classList.toggle("red");
+}
+
+
+
+
+
