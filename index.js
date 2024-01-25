@@ -1,12 +1,20 @@
-const imgBox = document.querySelector("#container > img");
+const open = document.querySelector("#open");
+const modalBox = document.querySelector("#modal-box");
+const close = document.querySelector("#close");
 
-imgBox.addEventListener("mouseover", function() {
-  imgBox.src = "img/KakaoTalk_20240117_233609665.jpg";
+// open.addEventListener("click", () => {
+//   modalBox.classList.add("active"); // 클릭하면 클래스리스트에 .active 스타일 추가
+// });
+
+
+// 이벤트 객체 출력
+open.addEventListener("click", (e) => {
+  console.log(e)
+  modalBox.classList.add("active"); // 클릭하면 클래스리스트에 .active 스타일 추가
 });
-imgBox.addEventListener("mouseout", function() {
-  imgBox.src="img/KakaoTalk_20240111_203933282.jpg";
+
+
+
+close.addEventListener("click", () => {
+  modalBox.classList.remove("active"); // 클릭하면 클래스리스트에서 .active 스타일 제거
 });
-
-
-
-
