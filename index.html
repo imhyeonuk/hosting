@@ -1,60 +1,12 @@
-
-
-
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8"/>
-    <title>Kakao 지도 시작하기</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
 </head>
 <body>
-    <div id="map" style="width:500px;height:400px;"></div>
-    <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=e17b255a81f15150d802f2e57887f807"></script>
-
-    <script>
-        var container = document.getElementById('map');
-        var options = {
-            center: new kakao.maps.LatLng(35.132796, 129.106934),
-            level: 3
-        };
-
-        var map = new kakao.maps.Map(container, options);
-        var polylinePath = [];
-        var polyline = new kakao.maps.Polyline({
-            map: map,
-            path: polylinePath,
-            strokeWeight: 10,
-            strokeColor: '#000000',
-            strokeOpacity: 0.7,
-            strokeStyle: 'solid'
-        });
-
-        function updatePosition(position) {
-            var lat = position.coords.latitude,
-                lon = position.coords.longitude;
-            var newPoint = new kakao.maps.LatLng(lat, lon);
-            polylinePath.push(newPoint);
-            polyline.setPath(polylinePath);
-            map.setCenter(newPoint);
-        }
-
-        function handleError(error) {
-            console.warn(`ERROR(${error.code}): ${error.message}`);
-        }
-
-        if (navigator.geolocation) {
-            navigator.geolocation.watchPosition(updatePosition, handleError, {
-                enableHighAccuracy: true,
-                timeout: 5000,
-                maximumAge: 0
-            });
-        } else {
-            alert("Geolocation is not supported by this browser.");
-        }
-    </script>
+    안녕
+    
 </body>
 </html>
-
-
-
