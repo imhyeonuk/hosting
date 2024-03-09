@@ -5,69 +5,49 @@
     <title>Kakao 지도 시작하기</title>
 </head>
 <body>
-<div id="map" style="width:500px;height:400px;"></div>
-<script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=e17b255a81f15150d802f2e57887f807"></script>
-<script>
-    var container = document.getElementById('map');
-    var options = {
-        center: new kakao.maps.LatLng(35.132796, 129.106934),
-        level: 3
-    };
+    <div id="map" style="width:500px;height:400px;"></div>
+    <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=e17b255a81f15150d802f2e57887f807"></script>
 
-    var map = new kakao.maps.Map(container, options);
-    var polylinePath = [];
-    var polyline = new kakao.maps.Polyline({
-        map: map,
-        path: polylinePath,
-        strokeWeight: 10,
-        strokeColor: '#000000',
-        strokeOpacity: 0.7,
-        strokeStyle: 'solid'
-    });
+    <script>
+        var container = document.getElementById('map');
+        var options = {
+            center: new kakao.maps.LatLng(35.132796, 129.106934),
+            level: 3
+        };
 
-    // 화살표를 나타내는 커스텀 오버레이 생성
-    var arrowOverlay = new kakao.maps.CustomOverlay({
-        content: '<div style="transform:rotate(0deg);"><svg width="30" height="30" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="#000000"><path d="M12 2L7 9h10L12 2zm0 3.82L13.74 9h-3.48L12 5.82zM7 11v2h10v-2H7zm0 4v6h10v-6H7z"/></svg></div>',
-        position: options.center,
-        xAnchor: 0.5,
-        yAnchor: 0.5,
-        zIndex: 1
-    });
-
-    arrowOverlay.setMap(map);
-
-    function updatePosition(position) {
-        var lat = position.coords.latitude,
-            lon = position.coords.longitude;
-        var newPoint = new kakao.maps.LatLng(lat, lon);
-
-        polylinePath.push(newPoint);
-        polyline.setPath(polylinePath);
-        map.setCenter(newPoint);
-
-        arrowOverlay.setPosition(newPoint);
-    }
-
-    function handleError(error) {
-        console.warn(`ERROR(${error.code}): ${error.message}`);
-    }
-
-    if (navigator.geolocation) {
-        navigator.geolocation.watchPosition(updatePosition, handleError, {
-            enableHighAccuracy: true,
-            timeout: 5000,
-            maximumAge: 0
+        var map = new kakao.maps.Map(container, options);
+        var polylinePath = [];
+        var polyline = new kakao.maps.Polyline({
+            map: map,
+            path: polylinePath,
+            strokeWeight: 10,
+            strokeColor: '#000000',
+            strokeOpacity: 0.7,
+            strokeStyle: 'solid'
         });
-    } else {
-        alert("Geolocation is not supported by this browser.");
-    }
 
-    // Device Orientation 이벤트 리스너 추가
-    window.addEventListener('deviceorientation', function(event) {
-        var alpha = event.alpha;
-        var arrowElement = arrowOverlay.getContent().firstElementChild;
-        arrowElement.style.transform = 'rotate(' + alpha + 'deg)';
-    });
-</script>
+        function updatePosition(position) {
+            var lat = position.coords.latitude,
+                lon = position.coords.longitude;
+            var newPoint = new kakao.maps.LatLng(lat, lon);
+            polylinePath.push(newPoint);
+            polyline.setPath(polylinePath);
+            map.setCenter(newPoint);
+        }
+
+        function handleError(error) {
+            console.warn(`ERROR(${error.code}): ${error.message}`);
+        }
+
+        if (navigator.geolocation) {
+            navigator.geolocation.watchPosition(updatePosition, handleError, {
+                enableHighAccuracy: true,
+                timeout: 5000,
+                maximumAge: 0
+            });
+        } else {
+            alert("Geolocation is not supported by this browser.");
+        }
+    </script>
 </body>
-</html>
+</html> 
