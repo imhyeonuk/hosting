@@ -66,14 +66,16 @@
         var watchId;
 
         document.getElementById('toggleBtn').addEventListener('click', function() {
-            if (!isTracking) {
-                this.textContent = '종료하기';
-                polylinePath = []; 
-            } else {
-                this.textContent = '시작하기';
-            }
-            isTracking = !isTracking;
-        });
+    if (!isTracking) {
+        this.textContent = '종료하기';
+        polylinePath = []; // 경로를 새로 시작하려면 이전 경로를 초기화
+        polyline.setStrokeColor(selectedLineColor); // 추적 시작 시 선택된 선 색상으로 업데이트
+        // polyline 객체를 여기서 새로 생성하거나, 색상만 업데이트하는 방식을 선택할 수 있습니다.
+    } else {
+        this.textContent = '시작하기';
+    }
+    isTracking = !isTracking; // 추적 상태 토글
+});
 
         document.getElementById('lineColorPicker').addEventListener('change', function() {
             selectedLineColor = this.value;
