@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -12,7 +11,8 @@
     <input type="color" id="lineColorPicker" name="lineColor" value="#FFAE00"> <!-- 선 색상 선택기 -->
     <label for="dotColorPicker">점 색상 선택:</label>
     <input type="color" id="dotColorPicker" name="dotColor" value="#FF5757"> <!-- 점 색상 선택기 추가 -->
-    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=e17b255a81f15150d802f2e57887f807"></script>
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=e17b255a81f15150d802f2e57887f807
+    "></script>
     <script>
         var container = document.getElementById('map');
         var options = {
@@ -69,13 +69,20 @@
     if (!isTracking) {
         this.textContent = '종료하기';
         polylinePath = []; // 경로를 새로 시작하려면 이전 경로를 초기화
-        polyline.setStrokeColor(selectedLineColor); // 추적 시작 시 선택된 선 색상으로 업데이트
-        // polyline 객체를 여기서 새로 생성하거나, 색상만 업데이트하는 방식을 선택할 수 있습니다.
+        isTracking = true; // 추적 시작
+
+        // 선택된 색상으로 polyline 선 색상 설정
+        selectedLineColor = document.getElementById('lineColorPicker').value;
+        polyline.setStrokeColor(selectedLineColor);
+        polyline.setMap(map); // 지도에 polyline을 다시 추가하여 변경사항을 적용
+
     } else {
         this.textContent = '시작하기';
+        isTracking = false; // 추적 중지
+        // 필요한 경우, 추적 중지시 추가적인 처리를 여기에 추가할 수 있습니다.
     }
-    isTracking = !isTracking; // 추적 상태 토글
 });
+
 
         document.getElementById('lineColorPicker').addEventListener('change', function() {
             selectedLineColor = this.value;
