@@ -1,17 +1,31 @@
-
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8"/>
-    <title>Kakao 지도 시작하기</title>
+    <title>Cookie Walk</title>
+    <style>
+        .location-dot {
+            height: 8px;
+            width: 8px;
+            border-radius: 50%;
+            position: absolute;
+            top: -4px;
+            left: -4px;
+        }
+        label {
+            margin-right: 10px;
+        }
+    </style>
 </head>
 <body>
     <div id="map" style="width:500px;height:400px;"></div>
     <button id="toggleBtn">시작하기</button>
-    <label for="lineColorPicker">선 색상 선택:</label>
-    <input type="color" id="lineColorPicker" value="#000000"> <!-- 초기 색상을 검정으로 설정 -->
-    <label for="dotColorPicker">점 색상 선택:</label>
-    <input type="color" id="dotColorPicker" value="#000000"> <!-- 점 색상도 검정으로 설정 -->
+    <br/>
+    <label for="dotColorPicker">점 색상 변경:</label>
+    <input type="color" id="dotColorPicker" value="#000000">
+    <br/>
+    <label for="lineColorPicker">선 색상 변경:</label>
+    <input type="color" id="lineColorPicker" value="#000000">
     <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=e17b255a81f15150d802f2e57887f807"></script>
     <script>
         var container = document.getElementById('map');
@@ -19,30 +33,26 @@
             center: new kakao.maps.LatLng(33.450701, 126.570667),
             level: 3
         };
-
         var map = new kakao.maps.Map(container, options);
         var polylinePath = [];
-        var selectedLineColor = '#000000'; // 초기 선 색상을 검정으로 설정
-        var selectedDotColor = '#000000'; // 초기 점 색상도 검정으로 설정
-
         var polyline = new kakao.maps.Polyline({
             map: map,
             path: polylinePath,
             strokeWeight: 5,
-            strokeColor: selectedLineColor,
+            strokeColor: document.getElementById('lineColorPicker').value, // 선 색상 초기값
             strokeOpacity: 0.7,
             strokeStyle: 'solid'
         });
 
+        var dotColor = document.getElementById('dotColorPicker').value; // 점 색상 초기값
         var locationDot = null;
-
         function displayCurrentLocation(position) {
             var lat = position.coords.latitude,
                 lon = position.coords.longitude;
             var locPosition = new kakao.maps.LatLng(lat, lon);
-
+            
             if (!locationDot) {
-                var dotContent = '<div class="location-dot" style="background-color: ' + selectedDotColor + '"></div>';
+                var dotContent = '<div class="location-dot" style="background-color:' + dotColor + '"></div>';
                 locationDot = new kakao.maps.CustomOverlay({
                     map: map,
                     position: locPosition,
@@ -51,7 +61,6 @@
                 });
             } else {
                 locationDot.setPosition(locPosition);
-                document.querySelector('.location-dot').style.backgroundColor = selectedDotColor;
             }
 
             map.setCenter(locPosition);
@@ -63,55 +72,36 @@
         }
 
         var isTracking = false;
-        var watchId;
-
         document.getElementById('toggleBtn').addEventListener('click', function() {
-            if (!isTracking) {
-                this.textContent = '종료하기';
-                // 경로 추적 시작
-                if (!navigator.geolocation) {
-                    alert("Geolocation is not supported by this browser.");
-                    return;
-                }
-                watchId = navigator.geolocation.watchPosition(displayCurrentLocation, handleError, {
-                    enableHighAccuracy: true,
-                    timeout: 5000,
-                    maximumAge: 0
-                });
-            } else {
-                this.textContent = '시작하기';
-                // 경로 추적 중지하지만, 현재 위치와 그린 경로 유지
-                navigator.geolocation.clearWatch(watchId);
-            }
             isTracking = !isTracking;
-        });
-
-        document.getElementById('lineColorPicker').addEventListener('change', function() {
-            selectedLineColor = this.value; // 선 색상 선택
-            polyline.setStrokeColor(selectedLineColor); // 변경된 선 색상 적용
+            this.textContent = isTracking ? '종료하기' : '시작하기';
+            if (isTracking) {
+                polylinePath = [];
+                polyline.setStrokeColor(document.getElementById('lineColorPicker').value);
+            }
         });
 
         document.getElementById('dotColorPicker').addEventListener('change', function() {
-            selectedDotColor = this.value; // 점 색상 선택
+            dotColor = this.value;
             if(locationDot) {
-                var dotContent = '<div class="location-dot" style="background-color: ' + selectedDotColor + '"></div>';
+                var dotContent = '<div class="location-dot" style="background-color:' + dotColor + '"></div>';
                 locationDot.setContent(dotContent);
             }
         });
+
+        if (navigator.geolocation) {
+            navigator.geolocation.watchPosition(displayCurrentLocation, handleError, {
+                enableHighAccuracy: true,
+                timeout: 5000,
+                maximumAge: 0
+            });
+        } else {
+            alert("Geolocation is not supported by this browser.");
+        }
 
         function handleError(error) {
             console.warn(`ERROR(${error.code}): ${error.message}`);
         }
     </script>
-    <style>
-        .location-dot {
-            height: 8px;
-            width: 8px;
-            border-radius: 50%;
-            position: absolute;
-            top: -4px;
-            left: -4px;
-        }
-    </style>
 </body>
 </html>
