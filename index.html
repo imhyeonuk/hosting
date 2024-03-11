@@ -6,12 +6,12 @@
 </head>
 <body>
     <div id="map" style="width:500px;height:400px;"></div>
-    <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=e17b255a81f15150d802f2e57887f807"></script>
-
+    <button id="toggleBtn">시작하기</button>
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=e17b255a81f15150d802f2e57887f807"></script>
     <script>
         var container = document.getElementById('map');
         var options = {
-            center: new kakao.maps.LatLng(35.132796, 129.106934),
+            center: new kakao.maps.LatLng(33.450701, 126.570667), // 초기 중심 좌표 설정
             level: 3
         };
 
@@ -20,27 +20,55 @@
         var polyline = new kakao.maps.Polyline({
             map: map,
             path: polylinePath,
-            strokeWeight: 10,
-            strokeColor: '#000000',
+            strokeWeight: 5,
+            strokeColor: '#FFAE00',
             strokeOpacity: 0.7,
             strokeStyle: 'solid'
         });
+        var locationDot = null; // 사용자 위치를 표시할 점
 
-        function updatePosition(position) {
+        function displayCurrentLocation(position) {
             var lat = position.coords.latitude,
                 lon = position.coords.longitude;
-            var newPoint = new kakao.maps.LatLng(lat, lon);
-            polylinePath.push(newPoint);
-            polyline.setPath(polylinePath);
-            map.setCenter(newPoint);
+            var locPosition = new kakao.maps.LatLng(lat, lon); // 사용자의 현재 위치
+
+            if (!locationDot) {
+                // 점이 없으면 새로 생성
+                var dotContent = '<div class="location-dot"></div>'; // 점을 나타낼 HTML
+                locationDot = new kakao.maps.CustomOverlay({
+                    map: map,
+                    position: locPosition,
+                    content: dotContent,
+                    yAnchor: 1 
+                });
+            } else {
+                // 점이 이미 있으면 위치만 업데이트
+                locationDot.setPosition(locPosition);
+            }
+
+            map.setCenter(locPosition);
+
+            if (isTracking) {
+                polylinePath.push(locPosition);
+                polyline.setPath(polylinePath);
+            }
         }
 
-        function handleError(error) {
-            console.warn(`ERROR(${error.code}): ${error.message}`);
-        }
+        var isTracking = false;
+        var watchId;
+
+        document.getElementById('toggleBtn').addEventListener('click', function() {
+            if (!isTracking) {
+                this.textContent = '종료하기';
+                polylinePath = []; // 경로를 새로 시작하려면 이전 경로를 초기화
+            } else {
+                this.textContent = '시작하기';
+            }
+            isTracking = !isTracking; // 추적 상태 토글
+        });
 
         if (navigator.geolocation) {
-            navigator.geolocation.watchPosition(updatePosition, handleError, {
+            watchId = navigator.geolocation.watchPosition(displayCurrentLocation, handleError, {
                 enableHighAccuracy: true,
                 timeout: 5000,
                 maximumAge: 0
@@ -48,6 +76,21 @@
         } else {
             alert("Geolocation is not supported by this browser.");
         }
+
+        function handleError(error) {
+            console.warn(`ERROR(${error.code}): ${error.message}`);
+        }
     </script>
+    <style>
+        .location-dot {
+            height: 8px;
+            width: 8px;
+            background-color: #FFAE00;
+            border-radius: 50%;
+            position: absolute;
+            top: -4px; /* 위치 조정을 위해 */
+            left: -4px; /* 위치 조정을 위해 */
+        }
+    </style>
 </body>
-</html> 
+</html>
