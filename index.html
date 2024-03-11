@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -7,34 +8,41 @@
 <body>
     <div id="map" style="width:500px;height:400px;"></div>
     <button id="toggleBtn">시작하기</button>
+    <label for="lineColorPicker">선 색상 선택:</label>
+    <input type="color" id="lineColorPicker" name="lineColor" value="#FFAE00"> <!-- 선 색상 선택기 -->
+    <label for="dotColorPicker">점 색상 선택:</label>
+    <input type="color" id="dotColorPicker" name="dotColor" value="#FF5757"> <!-- 점 색상 선택기 추가 -->
     <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=e17b255a81f15150d802f2e57887f807"></script>
     <script>
         var container = document.getElementById('map');
         var options = {
-            center: new kakao.maps.LatLng(33.450701, 126.570667), // 초기 중심 좌표 설정
+            center: new kakao.maps.LatLng(33.450701, 126.570667),
             level: 3
         };
 
         var map = new kakao.maps.Map(container, options);
         var polylinePath = [];
+        var selectedLineColor = '#FFAE00'; // 초기 선 색상 값
+        var selectedDotColor = '#FF5757'; // 초기 점 색상 값
+
         var polyline = new kakao.maps.Polyline({
             map: map,
             path: polylinePath,
             strokeWeight: 5,
-            strokeColor: '#FFAE00',
+            strokeColor: selectedLineColor, // 선 색상 동적으로 지정
             strokeOpacity: 0.7,
             strokeStyle: 'solid'
         });
-        var locationDot = null; // 사용자 위치를 표시할 점
+
+        var locationDot = null;
 
         function displayCurrentLocation(position) {
             var lat = position.coords.latitude,
                 lon = position.coords.longitude;
-            var locPosition = new kakao.maps.LatLng(lat, lon); // 사용자의 현재 위치
+            var locPosition = new kakao.maps.LatLng(lat, lon);
 
             if (!locationDot) {
-                // 점이 없으면 새로 생성
-                var dotContent = '<div class="location-dot"></div>'; // 점을 나타낼 HTML
+                var dotContent = '<div class="location-dot" style="background-color: ' + selectedDotColor + '"></div>'; // 점 색상 동적으로 지정
                 locationDot = new kakao.maps.CustomOverlay({
                     map: map,
                     position: locPosition,
@@ -42,8 +50,8 @@
                     yAnchor: 1 
                 });
             } else {
-                // 점이 이미 있으면 위치만 업데이트
                 locationDot.setPosition(locPosition);
+                document.querySelector('.location-dot').style.backgroundColor = selectedDotColor; // 점 색상 업데이트
             }
 
             map.setCenter(locPosition);
@@ -60,11 +68,24 @@
         document.getElementById('toggleBtn').addEventListener('click', function() {
             if (!isTracking) {
                 this.textContent = '종료하기';
-                polylinePath = []; // 경로를 새로 시작하려면 이전 경로를 초기화
+                polylinePath = []; 
             } else {
                 this.textContent = '시작하기';
             }
-            isTracking = !isTracking; // 추적 상태 토글
+            isTracking = !isTracking;
+        });
+
+        document.getElementById('lineColorPicker').addEventListener('change', function() {
+            selectedLineColor = this.value;
+            polyline.setStrokeColor(selectedLineColor); // 사용자가 선택한 색상으로 선 색상 업데이트
+        });
+
+        document.getElementById('dotColorPicker').addEventListener('change', function() {
+            selectedDotColor = this.value; // 사용자가 선택한 색상으로 점 색상 업데이트
+            if(locationDot) {
+                var dotContent = '<div class="location-dot" style="background-color: ' + selectedDotColor + '"></div>'; // 점 색상 업데이트
+                locationDot.setContent(dotContent);
+            }
         });
 
         if (navigator.geolocation) {
@@ -85,11 +106,10 @@
         .location-dot {
             height: 8px;
             width: 8px;
-            background-color: #FFAE00;
             border-radius: 50%;
             position: absolute;
-            top: -4px; /* 위치 조정을 위해 */
-            left: -4px; /* 위치 조정을 위해 */
+            top: -4px;
+            left: -4px;
         }
     </style>
 </body>
