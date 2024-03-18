@@ -30,6 +30,7 @@
         });
         var drawing = false;
         var dotColor = '#000000'; // 초기 점 색상
+        var lineColor = '#000000'; // 선 색상 초기값도 여기에 추가
         var currentPositionOverlay = new kakao.maps.CustomOverlay({});
 
         document.getElementById('toggleDrawing').addEventListener('click', function() {
@@ -37,6 +38,8 @@
             this.textContent = drawing ? '종료하기' : '시작하기';
             if (!drawing) {
                 polylinePath = [];
+            } else {
+                polyline.setStrokeColor(lineColor); // 사용자가 선 색깔을 변경한 후 시작하기를 눌렀을 때 업데이트
             }
         });
 
@@ -46,6 +49,7 @@
         });
 
         document.getElementById('lineColorPicker').addEventListener('change', function() {
+            lineColor = this.value; // 여기에서 lineColor 변수를 업데이트
             polyline.setStrokeColor(this.value);
         });
 
