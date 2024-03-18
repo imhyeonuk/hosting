@@ -6,29 +6,31 @@
 </head>
 <body>
     <div id="map" style="width:500px;height:400px;"></div>
+    <label for="dotColorPicker">점 색깔 변경:</label>
+    <input type="color" id="dotColorPicker" name="dotColorPicker">
+    <label for="lineColorPicker">선 색깔 변경:</label>
+    <input type="color" id="lineColorPicker" name="lineColorPicker">
     <button id="toggleDrawing">시작하기</button>
     <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=e17b255a81f15150d802f2e57887f807"></script>
-
     <script>
         var container = document.getElementById('map');
         var options = {
             center: new kakao.maps.LatLng(35.132796, 129.106934),
             level: 3
         };
-
         var map = new kakao.maps.Map(container, options);
         var polylinePath = [];
         var polyline = new kakao.maps.Polyline({
             map: map,
             path: polylinePath,
             strokeWeight: 5,
-            strokeColor: '#FF0000',
+            strokeColor: '#000000', // 초기 선 색상
             strokeOpacity: 0.7,
             strokeStyle: 'solid'
         });
         var drawing = false;
-
-        var currentPositionOverlay = new kakao.maps.CustomOverlay({}); // 사용자의 현재 위치를 나타낼 CustomOverlay 생성
+        var dotColor = '#000000'; // 초기 점 색상
+        var currentPositionOverlay = new kakao.maps.CustomOverlay({});
 
         document.getElementById('toggleDrawing').addEventListener('click', function() {
             drawing = !drawing;
@@ -38,22 +40,34 @@
             }
         });
 
+        document.getElementById('dotColorPicker').addEventListener('change', function() {
+            dotColor = this.value;
+            updateCurrentPositionOverlay();
+        });
+
+        document.getElementById('lineColorPicker').addEventListener('change', function() {
+            polyline.setStrokeColor(this.value);
+        });
+
         function updatePosition(position) {
             var lat = position.coords.latitude,
                 lon = position.coords.longitude;
             var newPoint = new kakao.maps.LatLng(lat, lon);
-
-            // 사용자의 현재 위치를 나타내는 동그란 점으로 CustomOverlay 설정
-            var content = '<div style="width:10px;height:10px;background-color:#FF0000;border-radius:50%;"></div>';
-            currentPositionOverlay.setContent(content);
-            currentPositionOverlay.setPosition(newPoint);
-            currentPositionOverlay.setMap(map);
-
             if (drawing) {
                 polylinePath.push(newPoint);
                 polyline.setPath(polylinePath);
             }
             map.setCenter(newPoint);
+            updateCurrentPositionOverlay(newPoint);
+        }
+
+        function updateCurrentPositionOverlay(position) {
+            var content = '<div style="width:10px;height:10px;background-color:' + dotColor + ';border-radius:50%;"></div>';
+            currentPositionOverlay.setContent(content);
+            if (position) {
+                currentPositionOverlay.setPosition(position);
+            }
+            currentPositionOverlay.setMap(map);
         }
 
         function handleError(error) {
