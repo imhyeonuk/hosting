@@ -2,104 +2,45 @@
 <html>
 <head>
     <meta charset="utf-8"/>
-    <title>Cookie Walk Improved</title>
-    <style>
-        .location-dot {
-            height: 8px;
-            width: 8px;
-            border-radius: 50%;
-            position: absolute;
-            top: -4px;
-            left: -4px;
-        }
-        label {
-            margin-right: 10px;
-        }
-    </style>
+    <title>Kakao 지도 시작하기</title>
 </head>
 <body>
     <div id="map" style="width:500px;height:400px;"></div>
-    <button id="toggleBtn">시작하기</button>
-    <br/>
-    <label for="dotColorPicker">점 색상 변경:</label>
-    <input type="color" id="dotColorPicker" value="#000000">
-    <br/>
-    <label for="lineColorPicker">선 색상 변경:</label>
-    <input type="color" id="lineColorPicker" value="#000000">
-    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=e17b255a81f15150d802f2e57887f807"></script>
+    <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=e17b255a81f15150d802f2e57887f807"></script>
+
     <script>
         var container = document.getElementById('map');
         var options = {
-            center: new kakao.maps.LatLng(33.450701, 126.570667),
+            center: new kakao.maps.LatLng(35.132796, 129.106934),
             level: 3
         };
+
         var map = new kakao.maps.Map(container, options);
         var polylinePath = [];
         var polyline = new kakao.maps.Polyline({
             map: map,
             path: polylinePath,
-            strokeWeight: 5,
-            strokeColor: document.getElementById('lineColorPicker').value,
+            strokeWeight: 10,
+            strokeColor: '#000000',
             strokeOpacity: 0.7,
             strokeStyle: 'solid'
         });
 
-        var dotColor = document.getElementById('dotColorPicker').value; // 점 색상 초기값
-        var locationDot = null;
-
-        function displayCurrentLocation(position) {
+        function updatePosition(position) {
             var lat = position.coords.latitude,
                 lon = position.coords.longitude;
-            var locPosition = new kakao.maps.LatLng(lat, lon);
-            
-            if (!locationDot) {
-                var dotContent = '<div class="location-dot" style="background-color:' + dotColor + '"></div>';
-                locationDot = new kakao.maps.CustomOverlay({
-                    map: map,
-                    position: locPosition,
-                    content: dotContent,
-                    yAnchor: 1 
-                });
-            } else {
-                locationDot.setPosition(locPosition);
-            }
-
-            map.setCenter(locPosition);
-
-            if (isTracking) {
-                polylinePath.push(locPosition);
-                polyline.setPath(polylinePath);
-            }
+            var newPoint = new kakao.maps.LatLng(lat, lon);
+            polylinePath.push(newPoint);
+            polyline.setPath(polylinePath);
+            map.setCenter(newPoint);
         }
 
-        var isTracking = false;
-        document.getElementById('toggleBtn').addEventListener('click', function() {
-            isTracking = !isTracking;
-            this.textContent = isTracking ? '종료하기' : '시작하기';
-            if (isTracking) {
-                polylinePath = []; // 경로를 새로 시작
-            }
-        });
-
-        document.getElementById('lineColorPicker').addEventListener('change', function() {
-            var newColor = this.value;
-            polyline.setStrokeColor(newColor);
-            if (isTracking) {
-                // 현재 그리는 선의 색상을 즉각 반영
-                polyline.setOptions({strokeColor: newColor});
-            }
-        });
-
-        document.getElementById('dotColorPicker').addEventListener('change', function() {
-            dotColor = this.value;
-            if(locationDot) {
-                var dotContent = '<div class="location-dot" style="background-color:' + dotColor + '"></div>';
-                locationDot.setContent(dotContent);
-            }
-        });
+        function handleError(error) {
+            console.warn(`ERROR(${error.code}): ${error.message}`);
+        }
 
         if (navigator.geolocation) {
-            navigator.geolocation.watchPosition(displayCurrentLocation, handleError, {
+            navigator.geolocation.watchPosition(updatePosition, handleError, {
                 enableHighAccuracy: true,
                 timeout: 5000,
                 maximumAge: 0
@@ -107,10 +48,7 @@
         } else {
             alert("Geolocation is not supported by this browser.");
         }
-
-        function handleError(error) {
-            console.warn(`ERROR(${error.code}): ${error.message}`);
-        }
     </script>
 </body>
-</html>
+</html> 
+
