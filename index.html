@@ -54,16 +54,18 @@
         });
 
         function updatePosition(position) {
-            var lat = position.coords.latitude,
-                lon = position.coords.longitude;
-            var newPoint = new kakao.maps.LatLng(lat, lon);
-            if (drawing) {
-                polylinePath.push(newPoint);
-                polyline.setPath(polylinePath);
-            }
-            map.setCenter(newPoint);
-            updateCurrentPositionOverlay(newPoint);
-        }
+    var lat = position.coords.latitude,
+        lon = position.coords.longitude;
+    var newPoint = new kakao.maps.LatLng(lat, lon);
+    if (drawing) {
+        polylinePath.push(newPoint);
+        polyline.setPath(polylinePath);
+        polyline.setStrokeColor(lineColor); // 사용자가 선 색깔을 변경했을 때 실시간으로 반영
+    }
+    map.setCenter(newPoint);
+    updateCurrentPositionOverlay(newPoint);
+}
+
 
         function updateCurrentPositionOverlay(position) {
             var content = '<div style="width:10px;height:10px;background-color:' + dotColor + ';border-radius:50%;"></div>';
