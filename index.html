@@ -6,6 +6,7 @@
 </head>
 <body>
     <div id="map" style="width:500px;height:400px;"></div>
+    <button id="toggleDrawing">시작하기</button>
     <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=e17b255a81f15150d802f2e57887f807"></script>
 
     <script>
@@ -20,18 +21,38 @@
         var polyline = new kakao.maps.Polyline({
             map: map,
             path: polylinePath,
-            strokeWeight: 10,
-            strokeColor: '#000000',
+            strokeWeight: 5,
+            strokeColor: '#FF0000',
             strokeOpacity: 0.7,
             strokeStyle: 'solid'
+        });
+        var drawing = false;
+
+        var currentPositionOverlay = new kakao.maps.CustomOverlay({}); // 사용자의 현재 위치를 나타낼 CustomOverlay 생성
+
+        document.getElementById('toggleDrawing').addEventListener('click', function() {
+            drawing = !drawing;
+            this.textContent = drawing ? '종료하기' : '시작하기';
+            if (!drawing) {
+                polylinePath = [];
+            }
         });
 
         function updatePosition(position) {
             var lat = position.coords.latitude,
                 lon = position.coords.longitude;
             var newPoint = new kakao.maps.LatLng(lat, lon);
-            polylinePath.push(newPoint);
-            polyline.setPath(polylinePath);
+
+            // 사용자의 현재 위치를 나타내는 동그란 점으로 CustomOverlay 설정
+            var content = '<div style="width:10px;height:10px;background-color:#FF0000;border-radius:50%;"></div>';
+            currentPositionOverlay.setContent(content);
+            currentPositionOverlay.setPosition(newPoint);
+            currentPositionOverlay.setMap(map);
+
+            if (drawing) {
+                polylinePath.push(newPoint);
+                polyline.setPath(polylinePath);
+            }
             map.setCenter(newPoint);
         }
 
@@ -50,5 +71,4 @@
         }
     </script>
 </body>
-</html> 
-
+</html>
