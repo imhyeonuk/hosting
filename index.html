@@ -13,7 +13,11 @@
 <body>
 <button id="startDrawing">그림 그리기 시작</button>
 <button id="stopDrawing" style="display:none;">그림 그리기 종료</button>
-<button id="undoDrawing" style="display:none;">되돌리기</button> <!-- 되돌리기 버튼 추가 -->
+<button id="undoDrawing" style="display:none;">되돌리기</button>
+<button id="clearDrawing" style="display:none;">초기화</button> <!-- 지우개 버튼 추가 -->
+<button id="saveDrawing" style="display:none;">저장하기</button>
+<a href="loadMap.html" id="viewSavedDrawing" style="display:none;"><button>저장한 그림 보러가기</button></a>
+<input type="color" id="colorPicker"> <!-- 색상 선택기 추가 -->
 <div id="map"></div>
 <script>
 if (navigator.geolocation) {
@@ -25,7 +29,7 @@ if (navigator.geolocation) {
             zoom: 17
         };
         var map = new naver.maps.Map('map', mapOptions);
-        
+
         var marker = new naver.maps.Marker({
             position: new naver.maps.LatLng(lat, lon),
             map: map,
@@ -37,43 +41,96 @@ if (navigator.geolocation) {
 
         var drawing = false;
         var path = [];
+        var currentColor = '#5347AA'; // 초기 색상 설정
         var polyline = new naver.maps.Polyline({
             map: map,
             path: [],
-            strokeColor: '#5347AA',
+            strokeColor: currentColor,
             strokeWeight: 3
+        });
+
+        function updatePolyline() {
+            polyline.setMap(null); // 지도에서 폴리라인 제거
+            polyline = new naver.maps.Polyline({
+                map: map,
+                path: path,
+                strokeColor: currentColor, // 현재 선택된 색상 사용
+                strokeWeight: 3
+            });
+        }
+
+        // 그림 그리기 시작 전에만 색상 변경 가능
+        document.getElementById('colorPicker').addEventListener('change', function() {
+            if (!drawing) {
+                currentColor = this.value;
+                updatePolyline(); // 색상 변경 적용을 위해 폴리라인 업데이트
+            }
         });
 
         document.getElementById('startDrawing').addEventListener('click', function() {
             drawing = true;
             this.style.display = 'none';
             document.getElementById('stopDrawing').style.display = 'inline';
-            document.getElementById('undoDrawing').style.display = 'inline'; // 되돌리기 버튼 표시
+            document.getElementById('undoDrawing').style.display = 'inline';
+            document.getElementById('clearDrawing').style.display = 'inline'; // 그림 그리기 시작 시 지우개 버튼 표시
             map.setCursor('crosshair');
+            document.getElementById('colorPicker').disabled = true; // 색상 선택기 비활성화
+            path = []; // 이전 경로 초기화
+            updatePolyline(); // 폴리라인 업데이트 함수 호출
+            naver.maps.Event.addListener(map, 'zoom_changed', updatePolyline);
         });
 
         document.getElementById('stopDrawing').addEventListener('click', function() {
             drawing = false;
             document.getElementById('startDrawing').style.display = 'inline';
             this.style.display = 'none';
-            document.getElementById('undoDrawing').style.display = 'none'; // 되돌리기 버튼 숨김
+            document.getElementById('undoDrawing').style.display = 'none';
+            document.getElementById('clearDrawing').style.display = 'none'; // 그림 그리기 종료 시 지우개 버튼 숨김
+            document.getElementById('saveDrawing').style.display = 'inline'; // 저장하기 버튼 표시
+            document.getElementById('colorPicker').disabled = false; // 색상 선택기 활성화
+            
             map.setCursor('');
+            naver.maps.Event.removeListener(updatePolyline); // 확대/축소 이벤트 리스너 제거
+            path = [];
+            polyline.setPath(path);
         });
 
-        // 되돌리기 버튼 이벤트 핸들러
+
+        
+
         document.getElementById('undoDrawing').addEventListener('click', function() {
             if (path.length > 0) {
-                path.pop(); // 마지막 경로 제거
-                polyline.setPath(path); // 폴리라인 업데이트
+                path.pop();
+                polyline.setPath(path);
             }
         });
 
-        // 지도 위를 클릭하여 좌표를 콘솔에 출력하고 경로에 추가하는 이벤트 핸들러
+        // 초기화 버튼 클릭 시 그린 모든 것 제거
+        document.getElementById('clearDrawing').addEventListener('click', function() {
+            path = [];
+            updatePolyline(); // 그린 그림을 바로 지우도록 호출
+        });
+
+
+         // 저장하기 버튼 클릭 이벤트 핸들러
+    document.getElementById('saveDrawing').addEventListener('click', function() {
+        const drawingData = {
+            path: path,
+            color: currentColor
+        };
+        localStorage.setItem('drawingData', JSON.stringify(drawingData)); // 로컬 저장소에 그림 데이터 저장
+        alert('그림이 저장되었습니다.'); // 사용자에게 저장 완료 알림
+
+        document.getElementById('viewSavedDrawing').style.display = 'inline';
+    });
+    // ...
+
+
         naver.maps.Event.addListener(map, 'click', function(e) {
-            if (!drawing) return; // 그리기 모드가 활성화되어 있지 않으면 리턴
-            console.log(`위도: ${e.coord.lat()}, 경도: ${e.coord.lng()}`); // 클릭된 위치의 좌표를 콘솔에 출력
-            path.push(e.coord); // 경로에 클릭 위치 추가
-            polyline.setPath(path); // 폴리라인 업데이트
+            if (!drawing) return;
+            console.log(`위도: ${e.coord.lat()}, 경도: ${e.coord.lng()}`);
+            path.push(e.coord);
+            polyline.setPath(path);
         });
     }, function(err) {
         console.warn(`ERROR(${err.code}): ${err.message}`);
