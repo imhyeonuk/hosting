@@ -69,6 +69,8 @@ const savedDrawing = JSON.parse(localStorage.getItem('drawingData'));
             strokeColor: '#cccccc', // 옅은 회색
             strokeWeight: 3
         });
+
+        console.log(savedDrawing.color);
     
 
     // 지도 중심을 폴리라인의 첫 번째 점으로 설정
@@ -142,7 +144,7 @@ function checkIfNearPath(userPosition, path) {
     // 사용자가 경로에 가까이 있을 때 true를 반환해야 합니다.
     return path.some(point => {
         const pathPoint = new naver.maps.LatLng(point[0], point[1]);
-        return naver.maps.geometry.spherical.computeDistanceBetween(userPosition, pathPoint) < 10; // 10미터 이내로 설정
+        return naver.maps.geometry.spherical.computeDistanceBetween(userPosition, pathPoint) < 30; // 30미터 이내로 설정
     });
 }
 
