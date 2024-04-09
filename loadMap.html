@@ -129,9 +129,9 @@ function trackUserPositionAndUpdatePathColor() {
         }, function(error) {
             console.error(`ERROR(${error.code}): ${error.message}`);
         }, {
-            enableHighAccuracy: true,
-            maximumAge: 0,
-            timeout: 27000
+            enableHighAccuracy: true, // 더 정확한 위치 정보를 위해
+            maximumAge: 30000, // 30초 이내에 캐시된 위치 정보는 재사용
+            timeout: 10000 // 10초 이내에 위치 정보를 가져오지 못하면 오류 발생
         });
     } else {
         alert("이 브라우저에서는 Geolocation이 지원되지 않습니다.");
@@ -139,12 +139,11 @@ function trackUserPositionAndUpdatePathColor() {
 }
 
 function checkIfNearPath(userPosition, path) {
-    // 사용자 위치와 경로의 각 점 사이의 거리를 계산하여, 특정 거리 이내에 있는지 확인
-    // 이 함수는 사용자 위치와 경로의 점들 사이의 거리를 계산하고,
-    // 사용자가 경로에 가까이 있을 때 true를 반환해야 합니다.
+    // 임곗값을 10미터로 설정
+    const THRESHOLD = 10; // 10미터
     return path.some(point => {
         const pathPoint = new naver.maps.LatLng(point[0], point[1]);
-        return naver.maps.geometry.spherical.computeDistanceBetween(userPosition, pathPoint) < 30; // 30미터 이내로 설정
+        return naver.maps.geometry.spherical.computeDistanceBetween(userPosition, pathPoint) < THRESHOLD;
     });
 }
 

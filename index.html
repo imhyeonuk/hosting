@@ -73,6 +73,7 @@ if (navigator.geolocation) {
             document.getElementById('stopDrawing').style.display = 'inline';
             document.getElementById('undoDrawing').style.display = 'inline';
             document.getElementById('clearDrawing').style.display = 'inline'; // 그림 그리기 시작 시 지우개 버튼 표시
+            document.getElementById('saveDrawing').style.display = 'none'; // 수정된 부분: 그림 그리기 시작 시 저장하기 버튼 숨김
             map.setCursor('crosshair');
             document.getElementById('colorPicker').disabled = true; // 색상 선택기 비활성화
             path = []; // 이전 경로 초기화
