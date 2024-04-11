@@ -22,6 +22,7 @@
   };
   var map = new naver.maps.Map('map', mapOptions);
   var userMarker, walking = false, walkPath = [], savedPathPolyline;
+  var tolerance = 10; // 회색선과의 최대 허용 거리 (미터)
 
   const savedDrawing = JSON.parse(localStorage.getItem('drawingData'));
   if (savedDrawing && savedDrawing.path.length > 0) {
@@ -31,20 +32,12 @@
       strokeColor: '#cccccc', // 회색
       strokeWeight: 3
     });
-    
-    
+
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(function(position) {
         var userPos = new naver.maps.LatLng(position.coords.latitude, position.coords.longitude);
         map.setCenter(userPos);
-        userMarker = new naver.maps.Marker({
-          position: userPos,
-          map: map,
-          icon: {
-            content: `<div style="width:10px; height:10px; background-color:${savedDrawing.color}; border-radius:50%;"></div>`,
-            anchor: new naver.maps.Point(5, 5)
-          }
-        });
+        updateUserMarker(userPos);
       }, function(err) {
         console.error(`ERROR(${err.code}): ${err.message}`);
       }, {
@@ -52,56 +45,82 @@
         timeout:5000,
         enableHighAccuracy: true
       });
+
+      document.getElementById('startWalking').addEventListener('click', function() {
+        this.style.display = 'none';
+        document.getElementById('stopWalking').style.display = 'inline';
+        walking = true;
+        startWalking();
+      });
+
+      document.getElementById('stopWalking').addEventListener('click', function() {
+        this.style.display = 'none';
+        document.getElementById('startWalking').style.display = 'inline';
+        walking = false;
+        stopWalking();
+      });
     } else {
       alert("이 브라우저에서는 Geolocation이 지원되지 않습니다.");
-    }
-
-    document.getElementById('startWalking').addEventListener('click', function() {
-      this.style.display = 'none';
-      document.getElementById('stopWalking').style.display = 'inline';
-      walking = true;
-      navigator.geolocation.watchPosition(function(position) {
-        var userPos = new naver.maps.LatLng(position.coords.latitude, position.coords.longitude);
-        map.setCenter(userPos);
-        updateUserMarker(position.coords.latitude, position.coords.longitude);
-        walkPath.push(userPos);
-        new naver.maps.Polyline({
-          map: map,
-          path: walkPath,
-          strokeColor: savedDrawing.color,
-          strokeWeight: 3,
-          strokeOpacity: 0.7
-        });
-      }, function(error) {
-        console.error('Geolocation error:', error);
-      }, {
-        maximumAge: 10000,
-        timeout: 5000,
-        enableHighAccuracy: true
-      });
-    });
-
-    document.getElementById('stopWalking').addEventListener('click', function() {
-      this.style.display = 'none';
-      document.getElementById('startWalking').style.display = 'inline';
-      walking = false;
-      if (navigator.geolocation) navigator.geolocation.clearWatch(updateUserMarker);
-    });
-
-    function updateUserMarker(lat, lng) {
-      if (userMarker) userMarker.setMap(null);
-      userMarker = new naver.maps.Marker({
-        position: new naver.maps.LatLng(lat, lng),
-        map: map,
-        icon: {
-          content: `<div style="width:10px; height:10px; background-color:${savedDrawing.color}; border-radius:50%;"></div>`,
-          anchor: new naver.maps.Point(5, 5)
-        }
-      });
     }
   } else {
     alert('저장된 그림이 없습니다.');
   }
+
+  function updateUserMarker(userPos) {
+    if (userMarker) userMarker.setMap(null);
+    userMarker = new naver.maps.Marker({
+      position: userPos,
+      map: map,
+      icon: {
+        content: `<div style="width:10px; height:10px; background-color:${savedDrawing.color}; border-radius:50%;"></div>`,
+        anchor: new naver.maps.Point(5, 5)
+      }
+    });
+  }
+
+  function startWalking() {
+    navigator.geolocation.watchPosition(function(position) {
+      var userPos = new naver.maps.LatLng(position.coords.latitude, position.coords.longitude);
+      map.setCenter(userPos);
+      updateUserMarker(userPos);
+      if (isCloseToPath(userPos, savedPathPolyline, tolerance)) {
+        walkPath.push(userPos);
+        drawColorLine(walkPath, savedDrawing.color);
+      }
+    }, function(error) {
+      console.error('Geolocation error:', error);
+    }, {
+      maximumAge: 10000,
+      timeout: 5000,
+      enableHighAccuracy: true
+    });
+  }
+
+  function stopWalking() {
+    if (navigator.geolocation) navigator.geolocation.clearWatch(updateUserMarker);
+  }
+
+  function isCloseToPath(userPos, pathPolyline, tolerance) {
+    var path = pathPolyline.getPath();
+    for (var i = 0; i < path.length; i++) {
+      var distance = naver.maps.geometry.spherical.computeDistanceBetween(userPos, path[i]);
+      if (distance < tolerance) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function drawColorLine(path, color) {
+    new naver.maps.Polyline({
+      map: map,
+      path: path,
+      strokeColor: color,
+      strokeWeight: 3,
+      strokeOpacity: 0.7
+    });
+  }
+
 </script>
 </body>
 </html>
