@@ -11,29 +11,25 @@
 </head>
 <body>
 <div id="map"></div>
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>저장된 그림 불러오기</title>
-  <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=t0xghbfgfz"></script>
-  <style>
-    #map { height: 400px; }
-  </style>
-</head>
-<body>
-<div id="map"></div>
+<button id="startWalking">걷기 시작</button>
+<button id="stopWalking" style="display:none;">걷기 종료</button>
+
 <script>
   var map;
   var savedPathData = localStorage.getItem('savedPath');
   var savedPath = JSON.parse(savedPathData) || [];
   var polyline;
   var currentMarker = null;  // 현재 위치를 표시할 마커 변수
+  var walking = false; // 걷기 상태
 
   function updateCurrentLocationMarker(lat, lng) {
     if (currentMarker) {
       currentMarker.setPosition(new naver.maps.LatLng(lat, lng));
+      if (walking) {
+        var path = polyline.getPath();
+        path.push(new naver.maps.LatLng(lat, lng));
+        polyline.setPath(path);
+      }
     } else {
       currentMarker = new naver.maps.Marker({
         position: new naver.maps.LatLng(lat, lng),
@@ -45,6 +41,21 @@
       });
     }
   }
+
+  function startWalking() {
+    walking = true;
+    document.getElementById("startWalking").style.display = "none";
+    document.getElementById("stopWalking").style.display = "inline";
+  }
+
+  function stopWalking() {
+    walking = false;
+    document.getElementById("stopWalking").style.display = "none";
+    document.getElementById("startWalking").style.display = "inline";
+  }
+
+  document.getElementById("startWalking").addEventListener("click", startWalking);
+  document.getElementById("stopWalking").addEventListener("click", stopWalking);
 
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(function(position) {
@@ -64,7 +75,6 @@
         strokeWeight: 3
       });
 
-      // 실시간 위치 추적 및 마커 업데이트
       navigator.geolocation.watchPosition(function(position) {
         var newLat = position.coords.latitude,
             newLng = position.coords.longitude;
@@ -90,10 +100,5 @@
     alert("이 브라우저에서는 Geolocation이 지원되지 않습니다.");
   }
 </script>
-
-</body>
-</html>
-
-
 </body>
 </html>

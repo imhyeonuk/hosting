@@ -39,27 +39,8 @@ if (navigator.geolocation) {
             }
         });
 
-        // 실시간 위치 업데이트 기능
-        function updatePosition() {
-            navigator.geolocation.watchPosition(function(position) {
-                var newLat = position.coords.latitude,
-                    newLon = position.coords.longitude;
-                var newPos = new naver.maps.LatLng(newLat, newLon);
-                marker.setPosition(newPos);
-                map.setCenter(newPos);
-            }, function(err) {
-                console.error("에러: " + err.code + " - " + err.message);
-            }, {
-                enableHighAccuracy: true,
-                maximumAge: 0,
-                timeout: 5000
-            });
-        }
+        
 
-        updatePosition();  // 위치 추적 시작
-
-
-    
         var drawing = false;
         var path = [];
         var currentColor = '#000000';
