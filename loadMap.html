@@ -11,6 +11,19 @@
 </head>
 <body>
 <div id="map"></div>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>저장된 그림 불러오기</title>
+  <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=t0xghbfgfz"></script>
+  <style>
+    #map { height: 400px; }
+  </style>
+</head>
+<body>
+<div id="map"></div>
 <script>
   var map;
   var savedPathData = localStorage.getItem('savedPath');
@@ -33,34 +46,6 @@
     }
   }
 
-// 실시간 위치 업데이트 기능
-function updatePosition() {
-            navigator.geolocation.watchPosition(function(position) {
-                var newLat = position.coords.latitude,
-                    newLon = position.coords.longitude;
-                var newPos = new naver.maps.LatLng(newLat, newLon);
-                marker.setPosition(newPos);
-                map.setCenter(newPos);
-            }, function(err) {
-                console.error("에러: " + err.code + " - " + err.message);
-            }, {
-                enableHighAccuracy: true,
-                maximumAge: 0,
-                timeout: 5000
-            });
-        }
-
-        updatePosition();  // 위치 추적 시작
-
-
-
-
-
-
-
-
-
-
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(function(position) {
       var lat = position.coords.latitude,
@@ -78,6 +63,21 @@ function updatePosition() {
         strokeColor: '#808080',
         strokeWeight: 3
       });
+
+      // 실시간 위치 추적 및 마커 업데이트
+      navigator.geolocation.watchPosition(function(position) {
+        var newLat = position.coords.latitude,
+            newLng = position.coords.longitude;
+        updateCurrentLocationMarker(newLat, newLng);
+        map.setCenter(new naver.maps.LatLng(newLat, newLng));
+      }, function(err) {
+        console.error(`ERROR(${err.code}): ${err.message}`);
+      }, {
+        enableHighAccuracy: true,
+        maximumAge: 0,
+        timeout: 5000
+      });
+
     }, function(err) {
       console.error(`ERROR(${err.code}): ${err.message}`);
       alert("위치 정보를 가져올 수 없습니다. 위치 서비스 설정을 확인해주세요.");
@@ -90,6 +90,10 @@ function updatePosition() {
     alert("이 브라우저에서는 Geolocation이 지원되지 않습니다.");
   }
 </script>
+
+</body>
+</html>
+
 
 </body>
 </html>
