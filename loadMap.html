@@ -66,6 +66,10 @@
         walkPath.push(newPosition);
         walkPolyline.setPath(walkPath);
       }
+      
+      // 사용자의 현재 위치를 기반으로 지도의 중심과 회전 각도 조정
+      map.setCenter(new naver.maps.LatLng(newLat, newLng));
+      map.setHeading(position.coords.heading);
     }, function(err) {
       console.error(`ERROR(${err.code}): ${err.message}`);
     }, {
