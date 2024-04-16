@@ -21,7 +21,7 @@
 <div id="map"></div>
 <script>
 if (navigator.geolocation) {
-    var watchId = navigator.geolocation.watchPosition(function(position) {
+    navigator.geolocation.getCurrentPosition(function(position) {
         var lat = position.coords.latitude,
             lon = position.coords.longitude;
         var mapOptions = {
