@@ -16,9 +16,13 @@
   var map;
   var savedPathData = localStorage.getItem('savedPath');
   var savedPath = JSON.parse(savedPathData) || [];
-  var savedColor = localStorage.getItem('savedColor') || '#000000'; // 저장된 색상 불러오기
+  var savedColor = localStorage.getItem('savedColor') || '#000000';
   var polyline;
   var currentMarker = null;
+  var walkPath = [];
+  var walkPolyline;
+  var walking = false;
+  var positionWatchID = null;
 
   function updateCurrentLocationMarker(lat, lng) {
     if (currentMarker) {
@@ -32,6 +36,43 @@
           anchor: new naver.maps.Point(5, 5)
         }
       });
+    }
+  }
+
+  function startTrackingPath() {
+    if (!walking) {
+      walking = true;
+      walkPolyline = new naver.maps.Polyline({
+        map: map,
+        path: walkPath,
+        strokeColor: savedColor,
+        strokeWeight: 3
+      });
+      positionWatchID = navigator.geolocation.watchPosition(function(position) {
+        var newLat = position.coords.latitude;
+        var newLng = position.coords.longitude;
+        var newPosition = new naver.maps.LatLng(newLat, newLng);
+        walkPath.push(newPosition);
+        walkPolyline.setPath(walkPath);
+        updateCurrentLocationMarker(newLat, newLng);
+      }, function(err) {
+        console.error(`ERROR(${err.code}): ${err.message}`);
+      }, {
+        maximumAge: 10000,
+        timeout: 5000,
+        enableHighAccuracy: true
+      });
+      document.getElementById('startWalking').textContent = "걷기 중지";
+    } else {
+      stopTrackingPath();
+    }
+  }
+
+  function stopTrackingPath() {
+    if (walking) {
+      walking = false;
+      navigator.geolocation.clearWatch(positionWatchID);
+      document.getElementById('startWalking').textContent = "걷기 시작";
     }
   }
 
@@ -53,47 +94,7 @@
         strokeWeight: 3
       });
 
-      var startWalkingBtn = document.getElementById('startWalking');
-      var walking = false;
-      var walkPath = [];
-
-      startWalkingBtn.addEventListener('click', function() {
-        if (!walking) {
-          walking = true;
-          walkPath = [currentMarker.getPosition()];
-          var walkPolyline = new naver.maps.Polyline({
-            map: map,
-            path: walkPath,
-            strokeColor: savedColor,
-            strokeWeight: 3
-          });
-
-          map.setCursor('crosshair');
-
-          navigator.geolocation.watchPosition(function(position) {
-            var newLat = position.coords.latitude;
-            var newLng = position.coords.longitude;
-            var newPosition = new naver.maps.LatLng(newLat, newLng);
-            walkPath.push(newPosition);
-            walkPolyline.setPath(walkPath);
-            updateCurrentLocationMarker(newLat, newLng);
-          }, function(err) {
-            console.error(`ERROR(${err.code}): ${err.message}`);
-          }, {
-            maximumAge: 10000,
-            timeout: 5000,
-            enableHighAccuracy: true
-          });
-
-          startWalkingBtn.textContent = "걷기 중지";
-
-        } else {
-          walking = false;
-          navigator.geolocation.clearWatch();
-          map.setCursor('');
-          startWalkingBtn.textContent = "걷기 시작";
-        }
-      });
+      document.getElementById('startWalking').addEventListener('click', startTrackingPath);
     }, function(err) {
       console.error(`ERROR(${err.code}): ${err.message}`);
       alert("위치 정보를 가져올 수 없습니다. 위치 서비스 설정을 확인해주세요.");
