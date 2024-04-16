@@ -110,10 +110,12 @@ if (navigator.geolocation) {
         });
 
         document.getElementById('saveDrawing').addEventListener('click', function() {
-            var pathData = JSON.stringify(path.map(function(p) { return { lat: p.lat(), lng: p.lng() }; }));
-            localStorage.setItem('savedPath', pathData);
-            alert('그림이 저장되었습니다.');
-        });
+    var pathData = JSON.stringify(path.map(function(p) { return { lat: p.lat(), lng: p.lng() }; }));
+    var colorData = currentColor; // 현재 색상 저장
+    localStorage.setItem('savedPath', pathData);
+    localStorage.setItem('savedColor', colorData); // 색상도 저장
+    alert('그림이 저장되었습니다.');
+});
 
         document.getElementById('viewSavedDrawing').addEventListener('click', function() {
             window.location.href = 'loadMap.html';

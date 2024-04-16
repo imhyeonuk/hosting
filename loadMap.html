@@ -12,24 +12,17 @@
 <body>
 <div id="map"></div>
 <button id="startWalking">걷기 시작</button>
-<button id="stopWalking" style="display:none;">걷기 종료</button>
-
 <script>
   var map;
   var savedPathData = localStorage.getItem('savedPath');
   var savedPath = JSON.parse(savedPathData) || [];
+  var savedColor = localStorage.getItem('savedColor') || '#000000'; // 저장된 색상 불러오기
   var polyline;
-  var currentMarker = null;  // 현재 위치를 표시할 마커 변수
-  var walking = false; // 걷기 상태
+  var currentMarker = null;
 
   function updateCurrentLocationMarker(lat, lng) {
     if (currentMarker) {
       currentMarker.setPosition(new naver.maps.LatLng(lat, lng));
-      if (walking) {
-        var path = polyline.getPath();
-        path.push(new naver.maps.LatLng(lat, lng));
-        polyline.setPath(path);
-      }
     } else {
       currentMarker = new naver.maps.Marker({
         position: new naver.maps.LatLng(lat, lng),
@@ -42,21 +35,6 @@
     }
   }
 
-  function startWalking() {
-    walking = true;
-    document.getElementById("startWalking").style.display = "none";
-    document.getElementById("stopWalking").style.display = "inline";
-  }
-
-  function stopWalking() {
-    walking = false;
-    document.getElementById("stopWalking").style.display = "none";
-    document.getElementById("startWalking").style.display = "inline";
-  }
-
-  document.getElementById("startWalking").addEventListener("click", startWalking);
-  document.getElementById("stopWalking").addEventListener("click", stopWalking);
-
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(function(position) {
       var lat = position.coords.latitude,
@@ -66,7 +44,7 @@
         zoom: 17
       };
       map = new naver.maps.Map('map', mapOptions);
-      updateCurrentLocationMarker(lat, lng);  // 초기 위치에 마커 생성
+      updateCurrentLocationMarker(lat, lng);
 
       polyline = new naver.maps.Polyline({
         map: map,
@@ -75,19 +53,47 @@
         strokeWeight: 3
       });
 
-      navigator.geolocation.watchPosition(function(position) {
-        var newLat = position.coords.latitude,
-            newLng = position.coords.longitude;
-        updateCurrentLocationMarker(newLat, newLng);
-        map.setCenter(new naver.maps.LatLng(newLat, newLng));
-      }, function(err) {
-        console.error(`ERROR(${err.code}): ${err.message}`);
-      }, {
-        enableHighAccuracy: true,
-        maximumAge: 0,
-        timeout: 5000
-      });
+      var startWalkingBtn = document.getElementById('startWalking');
+      var walking = false;
+      var walkPath = [];
 
+      startWalkingBtn.addEventListener('click', function() {
+        if (!walking) {
+          walking = true;
+          walkPath = [currentMarker.getPosition()];
+          var walkPolyline = new naver.maps.Polyline({
+            map: map,
+            path: walkPath,
+            strokeColor: savedColor,
+            strokeWeight: 3
+          });
+
+          map.setCursor('crosshair');
+
+          navigator.geolocation.watchPosition(function(position) {
+            var newLat = position.coords.latitude;
+            var newLng = position.coords.longitude;
+            var newPosition = new naver.maps.LatLng(newLat, newLng);
+            walkPath.push(newPosition);
+            walkPolyline.setPath(walkPath);
+            updateCurrentLocationMarker(newLat, newLng);
+          }, function(err) {
+            console.error(`ERROR(${err.code}): ${err.message}`);
+          }, {
+            maximumAge: 10000,
+            timeout: 5000,
+            enableHighAccuracy: true
+          });
+
+          startWalkingBtn.textContent = "걷기 중지";
+
+        } else {
+          walking = false;
+          navigator.geolocation.clearWatch();
+          map.setCursor('');
+          startWalkingBtn.textContent = "걷기 시작";
+        }
+      });
     }, function(err) {
       console.error(`ERROR(${err.code}): ${err.message}`);
       alert("위치 정보를 가져올 수 없습니다. 위치 서비스 설정을 확인해주세요.");
