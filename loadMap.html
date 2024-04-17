@@ -78,6 +78,10 @@
           var currentLocation = new naver.maps.LatLng(position.coords.latitude, position.coords.longitude);
           map.setCenter(currentLocation);
           currentMarker.setPosition(currentLocation);
+          if (walking) {
+            walkPath.push(currentLocation);
+            walkPolyline.setPath(walkPath);
+          }
         }, function(error) {
           console.error('Geolocation error: ' + error.message);
         }, {
@@ -93,6 +97,7 @@
         walking = !walking;
         if (walking) {
           walkPolyline.setMap(map);
+          walkPolyline.strokeColor = mapData.color; // Ensure the walk polyline uses the saved color
           startWalkingBtn.textContent = '걷기 중지';
           map.setCursor('crosshair');
         } else {
