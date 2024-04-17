@@ -60,7 +60,7 @@
       var polyline = new naver.maps.Polyline({
         map: map,
         path: JSON.parse(mapData.path).map(function(p) { return new naver.maps.LatLng(p.lat, p.lng); }),
-        strokeColor: '#808080', // Initial path in grey
+        strokeColor: '#808080',
         strokeWeight: 3
       });
 
@@ -68,21 +68,22 @@
       var walkPath = [];
       var walkPolyline = new naver.maps.Polyline({
         map: null,
-        path: [],
-        strokeColor: mapData.color, // New path in the saved color
+        strokeColor: mapData.color, // Use the saved color for new paths
         strokeWeight: 3
       });
 
+      function handleWalking(position) {
+        var currentLocation = new naver.maps.LatLng(position.coords.latitude, position.coords.longitude);
+        map.setCenter(currentLocation);
+        currentMarker.setPosition(currentLocation);
+        if (walking) {
+          walkPath.push(currentLocation);
+          walkPolyline.setPath(walkPath);
+        }
+      }
+
       if (navigator.geolocation) {
-        navigator.geolocation.watchPosition(function(position) {
-          var currentLocation = new naver.maps.LatLng(position.coords.latitude, position.coords.longitude);
-          map.setCenter(currentLocation);
-          currentMarker.setPosition(currentLocation);
-          if (walking) {
-            walkPath.push(currentLocation);
-            walkPolyline.setPath(walkPath);
-          }
-        }, function(error) {
+        navigator.geolocation.watchPosition(handleWalking, function(error) {
           console.error('Geolocation error: ' + error.message);
         }, {
           maximumAge: 10000,
@@ -97,21 +98,10 @@
         walking = !walking;
         if (walking) {
           walkPolyline.setMap(map);
-          walkPolyline.strokeColor = mapData.color; // Ensure the walk polyline uses the saved color
           startWalkingBtn.textContent = '걷기 중지';
-          map.setCursor('crosshair');
         } else {
-          walkPolyline.setPath(walkPath); // Keep the path on the map
-          walkPolyline.setMap(map); // Ensure the polyline is still visible
           startWalkingBtn.textContent = '걷기 시작';
           map.setCursor('');
-        }
-      });
-
-      map.addListener('click', function(e) {
-        if (walking) {
-          walkPath.push(e.coord);
-          walkPolyline.setPath(walkPath);
         }
       });
 
