@@ -43,7 +43,7 @@
       controlsDiv.appendChild(deleteMapBtn);
 
       var mapOptions = {
-        center: new naver.maps.LatLng(37.3595704, 127.105399), // Default center
+        center: new naver.maps.LatLng(37.3595704, 127.105399),
         zoom: 17
       };
       var map = new naver.maps.Map(mapDiv, mapOptions);
@@ -60,7 +60,7 @@
       var polyline = new naver.maps.Polyline({
         map: map,
         path: JSON.parse(mapData.path).map(function(p) { return new naver.maps.LatLng(p.lat, p.lng); }),
-        strokeColor: '#808080',
+        strokeColor: '#808080', // Initial path in grey
         strokeWeight: 3
       });
 
@@ -69,7 +69,7 @@
       var walkPolyline = new naver.maps.Polyline({
         map: null,
         path: [],
-        strokeColor: 'red',
+        strokeColor: mapData.color, // New path in the saved color
         strokeWeight: 3
       });
 
@@ -78,11 +78,6 @@
           var currentLocation = new naver.maps.LatLng(position.coords.latitude, position.coords.longitude);
           map.setCenter(currentLocation);
           currentMarker.setPosition(currentLocation);
-
-          if (walking) {
-            walkPath.push(currentLocation);
-            walkPolyline.setPath(walkPath);
-          }
         }, function(error) {
           console.error('Geolocation error: ' + error.message);
         }, {
@@ -101,10 +96,17 @@
           startWalkingBtn.textContent = '걷기 중지';
           map.setCursor('crosshair');
         } else {
-          walkPolyline.setMap(null);
+          walkPolyline.setPath(walkPath); // Keep the path on the map
+          walkPolyline.setMap(map); // Ensure the polyline is still visible
           startWalkingBtn.textContent = '걷기 시작';
           map.setCursor('');
-          walkPath = [];
+        }
+      });
+
+      map.addListener('click', function(e) {
+        if (walking) {
+          walkPath.push(e.coord);
+          walkPolyline.setPath(walkPath);
         }
       });
 
