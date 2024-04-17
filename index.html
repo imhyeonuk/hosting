@@ -39,8 +39,6 @@ if (navigator.geolocation) {
             }
         });
 
-        
-
         var drawing = false;
         var path = [];
         var currentColor = '#000000';
@@ -68,6 +66,8 @@ if (navigator.geolocation) {
             }
         });
 
+        var zoomChangeListener; // 변경된 부분: 이벤트 핸들러 핸들을 저장할 변수 선언
+
         document.getElementById('startDrawing').addEventListener('click', function() {
             drawing = true;
             this.style.display = 'none';
@@ -80,7 +80,8 @@ if (navigator.geolocation) {
             document.getElementById('colorPicker').disabled = true;
             path = [];
             updatePolyline();
-            naver.maps.Event.addListener(map, 'zoom_changed', updatePolyline);
+            // 변경된 부분: 이벤트 핸들러 핸들을 저장하고, 해당 핸들을 사용하여 이벤트 리스너 등록
+            zoomChangeListener = naver.maps.Event.addListener(map, 'zoom_changed', updatePolyline);
         });
 
         document.getElementById('stopDrawing').addEventListener('click', function() {
@@ -93,7 +94,8 @@ if (navigator.geolocation) {
             document.getElementById('viewSavedDrawing').style.display = 'inline';
             document.getElementById('colorPicker').disabled = false;
             map.setCursor('');
-            naver.maps.Event.removeListener(updatePolyline);
+            // 변경된 부분: 저장한 이벤트 핸들러 핸들을 사용하여 이벤트 리스너 제거
+            naver.maps.Event.removeListener(zoomChangeListener);
             polyline.setPath(path);
         });
 
@@ -110,13 +112,13 @@ if (navigator.geolocation) {
         });
 
         document.getElementById('saveDrawing').addEventListener('click', function() {
-    var savedMaps = JSON.parse(localStorage.getItem('savedMaps')) || [];
-    var pathData = JSON.stringify(path.map(function(p) { return { lat: p.lat(), lng: p.lng() }; }));
-    var colorData = currentColor;
-    savedMaps.push({ path: pathData, color: colorData });
-    localStorage.setItem('savedMaps', JSON.stringify(savedMaps));
-    alert('그림이 저장되었습니다.');
-});
+            var savedMaps = JSON.parse(localStorage.getItem('savedMaps')) || [];
+            var pathData = JSON.stringify(path.map(function(p) { return { lat: p.lat(), lng: p.lng() }; }));
+            var colorData = currentColor;
+            savedMaps.push({ path: pathData, color: colorData });
+            localStorage.setItem('savedMaps', JSON.stringify(savedMaps));
+            alert('그림이 저장되었습니다.');
+        });
 
         document.getElementById('viewSavedDrawing').addEventListener('click', function() {
             window.location.href = 'loadMap.html';
@@ -126,7 +128,9 @@ if (navigator.geolocation) {
             if (!drawing) return;
             path.push(e.coord);
             updatePolyline();
-        });
+           // 클릭할 때마다 위도와 경도를 console에 출력
+    console.log('위도:', e.coord._lat, '경도:', e.coord._lng);
+});
     }, function(err) {
         console.warn(`ERROR(${err.code}): ${err.message}`);
     }, {
