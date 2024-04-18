@@ -16,7 +16,7 @@
   <script>
     var savedMaps = JSON.parse(localStorage.getItem('savedMaps')) || [];
 
-    function initializeMapContainer(mapData, index, position) {
+    function initializeMapContainer(mapData, index) {
       var container = document.createElement('div');
       container.className = 'map-container';
       document.body.appendChild(container);
@@ -42,16 +42,14 @@
       deleteMapBtn.textContent = '지도 삭제';
       controlsDiv.appendChild(deleteMapBtn);
 
-      var initialPosition = new naver.maps.LatLng(position.coords.latitude, position.coords.longitude);
-      
       var mapOptions = {
-        center: initialPosition,
+        center: new naver.maps.LatLng(37.3595704, 127.105399),
         zoom: 17
       };
       var map = new naver.maps.Map(mapDiv, mapOptions);
 
       var currentMarker = new naver.maps.Marker({
-        position: initialPosition,
+        position: mapOptions.center,
         map: map,
         icon: {
           content: '<div style="width:10px; height:10px; background-color:black; border-radius:50%;"></div>',
@@ -59,10 +57,9 @@
         }
       });
 
-      var basePath = JSON.parse(mapData.path).map(function(p) { return new naver.maps.LatLng(p.lat, p.lng); });
-      var basePolyline = new naver.maps.Polyline({
+      var polyline = new naver.maps.Polyline({
         map: map,
-        path: basePath,
+        path: JSON.parse(mapData.path).map(function(p) { return new naver.maps.LatLng(p.lat, p.lng); }),
         strokeColor: '#808080',
         strokeWeight: 3
       });
@@ -71,54 +68,82 @@
       var walkPath = [];
       var walkPolyline = new naver.maps.Polyline({
         map: null,
-        strokeColor: mapData.color,
+        strokeColor: mapData.color, // Use the saved color for new paths
         strokeWeight: 3
       });
 
-      function adjustPosition(actualPosition) {
-        var minDistance = 10; // meters
+      function snapToPath(currentLocation) {
+        var minDistance = Infinity;
         var closestPoint = null;
-        var closestDistance = Infinity;
-        basePath.forEach(function(point) {
-          var distance = naver.maps.geometry.spherical.computeDistanceBetween(actualPosition, point);
-          if (distance < closestDistance) {
-            closestDistance = distance;
+      
+        polyline.getPath().forEach(function(point) {
+          var distance = naver.maps.geometry.spherical.computeDistanceBetween(currentLocation, point);
+          if (distance < minDistance) {
+            minDistance = distance;
             closestPoint = point;
           }
         });
-        return closestDistance <= minDistance ? closestPoint : actualPosition;
+      
+        if (minDistance <= 20) { // 20미터 이내일 경우 보정
+          return closestPoint;
+        }
+      
+        return currentLocation;
       }
 
       function handleWalking(position) {
-        var actualPosition = new naver.maps.LatLng(position.coords.latitude, position.coords.longitude);
-        var adjustedPosition = adjustPosition(actualPosition);
-        map.setCenter(adjustedPosition);
-        currentMarker.setPosition(adjustedPosition);
+        var currentLocation = new naver.maps.LatLng(position.coords.latitude, position.coords.longitude);
+        currentLocation = snapToPath(currentLocation); // 보정된 위치를 가져옴
+
+        currentMarker.setPosition(currentLocation); // 사용자의 위치를 표시
+
         if (walking) {
-          walkPath.push(adjustedPosition);
+          walkPath.push(currentLocation);
           walkPolyline.setPath(walkPath);
         }
+      }
+
+      if (navigator.geolocation) {
+        navigator.geolocation.watchPosition(handleWalking, function(error) {
+          console.error('Geolocation error: ' + error.message);
+        }, {
+          maximumAge: 10000,
+          timeout: 5000,
+          enableHighAccuracy: true
+        });
+
+        // 사용자의 현재 위치를 얻어와서 지도의 중심으로 설정
+        navigator.geolocation.getCurrentPosition(function(position) {
+          var userLocation = new naver.maps.LatLng(position.coords.latitude, position.coords.longitude);
+          map.setCenter(userLocation);
+          currentMarker.setPosition(userLocation); // 사용자의 위치를 표시
+        }, function(error) {
+          console.error('Geolocation error: ' + error.message);
+        });
+      } else {
+        alert("이 브라우저에서는 Geolocation이 지원되지 않습니다.");
       }
 
       startWalkingBtn.addEventListener('click', function() {
         walking = !walking;
         if (walking) {
           walkPolyline.setMap(map);
-          this.textContent = '걷기 중지';
+          startWalkingBtn.textContent = '걷기 중지';
         } else {
           walkPolyline.setMap(null);
           walkPath = [];
-          this.textContent = '걷기 시작';
+          startWalkingBtn.textContent = '걷기 시작';
+          map.setCursor('pointer');
         }
       });
 
       toggleDrawingBtn.addEventListener('click', function() {
-        if (basePolyline.getMap()) {
-          basePolyline.setMap(null);
-          this.textContent = '도면 보기';
+        if (polyline.getMap()) {
+          polyline.setMap(null);
+          toggleDrawingBtn.textContent = '도면 보기';
         } else {
-          basePolyline.setMap(map);
-          this.textContent = '도면 숨김';
+          polyline.setMap(map);
+          toggleDrawingBtn.textContent = '도면 숨김';
         }
       });
 
@@ -129,23 +154,12 @@
       });
     }
 
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(function(position) {
-        savedMaps.forEach(function(mapData, index) {
-          initializeMapContainer(mapData, index, position);
-        });
+    savedMaps.forEach(initializeMapContainer);
 
-        if (savedMaps.length === 0) {
-          var noMapsText = document.createElement('p');
-          noMapsText.textContent = '저장된 지도가 없습니다.';
-          document.body.appendChild(noMapsText);
-        }
-      }, function(error) {
-        console.error('Geolocation error: ' + error.message);
-        alert("현재 위치를 가져올 수 없습니다.");
-      });
-    } else {
-      alert("이 브라우저에서는 Geolocation이 지원되지 않습니다.");
+    if (savedMaps.length === 0) {
+      var noMapsText = document.createElement('p');
+      noMapsText.textContent = '저장된 지도가 없습니다.';
+      document.body.appendChild(noMapsText);
     }
   </script>
 </body>
