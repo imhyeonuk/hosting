@@ -72,31 +72,10 @@
         strokeWeight: 3
       });
 
-      function snapToPath(currentLocation) {
-        var minDistance = Infinity;
-        var closestPoint = null;
-      
-        polyline.getPath().forEach(function(point) {
-          var distance = naver.maps.geometry.spherical.computeDistanceBetween(currentLocation, point);
-          if (distance < minDistance) {
-            minDistance = distance;
-            closestPoint = point;
-          }
-        });
-      
-        if (minDistance <= 20) { // 20미터 이내일 경우 보정
-          return closestPoint;
-        }
-      
-        return currentLocation;
-      }
-
       function handleWalking(position) {
         var currentLocation = new naver.maps.LatLng(position.coords.latitude, position.coords.longitude);
-        currentLocation = snapToPath(currentLocation); // 보정된 위치를 가져옴
-
-        currentMarker.setPosition(currentLocation); // 사용자의 위치를 표시
-
+        map.setCenter(currentLocation);
+        currentMarker.setPosition(currentLocation);
         if (walking) {
           walkPath.push(currentLocation);
           walkPolyline.setPath(walkPath);
@@ -108,17 +87,7 @@
           console.error('Geolocation error: ' + error.message);
         }, {
           maximumAge: 10000,
-          timeout: 5000,
           enableHighAccuracy: true
-        });
-
-        // 사용자의 현재 위치를 얻어와서 지도의 중심으로 설정
-        navigator.geolocation.getCurrentPosition(function(position) {
-          var userLocation = new naver.maps.LatLng(position.coords.latitude, position.coords.longitude);
-          map.setCenter(userLocation);
-          currentMarker.setPosition(userLocation); // 사용자의 위치를 표시
-        }, function(error) {
-          console.error('Geolocation error: ' + error.message);
         });
       } else {
         alert("이 브라우저에서는 Geolocation이 지원되지 않습니다.");
@@ -130,10 +99,8 @@
           walkPolyline.setMap(map);
           startWalkingBtn.textContent = '걷기 중지';
         } else {
-          walkPolyline.setMap(null);
-          walkPath = [];
           startWalkingBtn.textContent = '걷기 시작';
-          map.setCursor('pointer');
+          map.setCursor('');
         }
       });
 
